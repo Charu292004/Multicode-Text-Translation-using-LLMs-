@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinguaBridge - Multilingual Translator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #38b000;
+            --warning: #ffaa00;
+            --error: #ef233c;
+            --groq-color: #7b3fe4;
+            --gemini-color: #0d6efd;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            --shadow-hover: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e2e8f0 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-image: url('https://www.transparenttextures.com/patterns/always-grey.png');
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: var(--shadow-hover);
+            overflow: hidden;
+            margin: 30px 0;
+            transition: var(--transition);
+            transform: translateY(0);
+            opacity: 1;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .container.hidden {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 35px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 4px solid var(--accent);
+        }
+
+        header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            letter-spacing: 1px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .language-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 25px;
+            z-index: 2;
+            position: relative;
+        }
+
+        .lang-btn {
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .lang-btn:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .lang-btn.active {
+            background-color: white;
+            color: var(--primary);
+            border-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .lang-btn img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .content {
+            padding: 35px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+        }
+
+        .input-label img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .input-box {
+            width: 100%;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            font-family: inherit;
+            font-size: 1.05rem;
+            resize: none;
+            min-height: 150px;
+            transition: var(--transition);
+            line-height: 1.6;
+            background-color: rgba(248, 249, 250, 0.7);
+        }
+
+        .input-box:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(76, 201, 240, 0.2);
+            background-color: white;
+        }
+
+        .input-box::placeholder {
+            color: #adb5bd;
+            opacity: 1;
+        }
+
+        .char-count {
+            position: absolute;
+            right: 15px;
+            bottom: 15px;
+            font-size: 0.85rem;
+            color: #6c757d;
+            background-color: rgba(233, 236, 239, 0.7);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 25px auto;
+            box-shadow: 0 6px 15px rgba(22, 96, 136, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(22, 96, 136, 0.4);
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn img {
+            width: 22px;
+            height: 22px;
+        }
+
+        .result-section {
+            display: none;
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .model-comparison {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .model-section {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .model-header {
+            background: linear-gradient(135deg, var(--groq-color) 0%, #5a2dbb 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 600;
+            margin-bottom: -1px;
+        }
+
+        .model-header.gemini {
+            background: linear-gradient(135deg, var(--gemini-color) 0%, #0a58ca 100%);
+        }
+
+        .model-results {
+            border: 1px solid #e9ecef;
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+        }
+
+        .result-card {
+            background-color: white;
+            border-radius: 0;
+            padding: 25px;
+            margin-bottom: 0;
+            box-shadow: none;
+            border-left: none;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .result-card:last-child {
+            border-bottom: none;
+        }
+
+        .result-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(76, 201, 240, 0.05) 0%, rgba(67, 97, 238, 0.05) 100%);
+            z-index: 0;
+        }
+
+        .result-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            color: var(--secondary);
+            font-weight: 700;
+            font-size: 1.2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .result-title img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .result-content {
+            padding: 15px;
+            background-color: rgba(248, 249, 250, 0.7);
+            border-radius: 10px;
+            line-height: 1.7;
+            font-size: 1.05rem;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid rgba(76, 201, 240, 0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 25px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading p {
+            font-size: 1.1rem;
+            color: var(--secondary);
+            font-weight: 500;
+            margin-top: 15px;
+        }
+
+        .error-message {
+            display: none;
+            background-color: #f8d7da;
+            color: var(--error);
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            text-align: center;
+            animation: shake 0.5s;
+            border-left: 4px solid var(--error);
+            font-weight: 500;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background-color: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .stats-bar {
+            background-color: rgba(233, 236, 239, 0.7);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-item i {
+            color: var(--primary);
+        }
+
+        .language-icon {
+            width: 120px;
+            height: 120px;
+            position: absolute;
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        .hindi-icon {
+            background: url('https://cdn-icons-png.flaticon.com/512/197/197419.png') no-repeat center;
+            background-size: contain;
+            top: 20px;
+            right: 20px;
+        }
+
+        .tamil-icon {
+            background: url('https://cdn-icons-png.flaticon.com/512/197/197421.png') no-repeat center;
+            background-size: contain;
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .telugu-icon {
+            background: url('https://cdn-icons-png.flaticon.com/512/197/197447.png') no-repeat center;
+            background-size: contain;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 25px 20px;
+            }
+            
+            header h1 {
+                font-size: 2.2rem;
+            }
+            
+            header p {
+                font-size: 1rem;
+            }
+            
+            .container {
+                margin: 20px 0;
+                border-radius: 15px;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+            
+            .language-buttons {
+                gap: 10px;
+            }
+            
+            .lang-btn {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+            
+            .model-comparison {
+                flex-direction: column;
+            }
+            
+            .result-card {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .submit-btn {
+                padding: 12px 25px;
+                font-size: 1rem;
+            }
+            
+            .input-box {
+                min-height: 120px;
+                padding: 15px;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-language"></i> LinguaBridge</h1>
+            <p>Compare translations between advanced AI models for English, Hindi, Tamil, and Telugu with perfect code-switch handling</p>
+            
+            <div class="language-buttons">
+                <button class="lang-btn active" data-lang="hindi">
+                    <img src="https://cdn-icons-png.flaticon.com/512/197/197419.png" alt="Hindi">
+                    Hindi-English
+                </button>
+                <button class="lang-btn" data-lang="tamil">
+                    <img src="https://cdn-icons-png.flaticon.com/512/197/197421.png" alt="Tamil">
+                    Tamil-English
+                </button>
+                <button class="lang-btn" data-lang="telugu">
+                    <img src="https://cdn-icons-png.flaticon.com/512/197/197447.png" alt="Telugu">
+                    Telugu-English
+                </button>
+            </div>
+            
+            <div class="language-icon hindi-icon"></div>
+            <div class="language-icon tamil-icon"></div>
+            <div class="language-icon telugu-icon"></div>
+        </header>
+        
+        <div class="content">
+            <div class="input-section">
+                <label for="userInput" class="input-label">
+                    <i class="fas fa-comment-dots"></i>
+                    Enter your mixed language text:
+                </label>
+                <textarea id="userInput" class="input-box" placeholder="Type or paste your text here..."></textarea>
+                <div class="char-count"><span id="charCount">0</span>/500</div>
+            </div>
+            
+            <button id="translateBtn" class="submit-btn">
+                <i class="fas fa-exchange-alt"></i>
+                Compare Translations
+            </button>
+            
+            <div class="error-message" id="errorMessage"></div>
+            
+            <div class="loading" id="loadingIndicator">
+                <div class="spinner"></div>
+                <p>Analyzing text with both AI models...</p>
+            </div>
+            
+            <div class="result-section" id="resultSection">
+                <div class="stats-bar" id="statsBar">
+                    <div class="stat-item">
+                        <i class="fas fa-language"></i>
+                        <span id="detectedLanguage">Language: -</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-stopwatch"></i>
+                        <span id="executionTime">Time: -</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Showing results from both models</span>
+                    </div>
+                </div>
+                
+                <div class="model-comparison">
+                    <div class="model-section">
+                        <div class="model-header">
+                            <img src="https://groq.com/favicon.ico" alt="Groq" style="width: 20px; height: 20px;">
+                            <span>Llama 3 (Groq)</span>
+                        </div>
+                        <div class="model-results">
+                            <div class="result-card">
+                                <div class="result-title">
+                                    <i class="fas fa-globe"></i>
+                                    Language Detected
+                                </div>
+                                <div class="result-content" id="groqDetectedLanguage"></div>
+                            </div>
+                            
+                            <div class="result-card">
+                                <div class="result-title">
+                                    <i class="fas fa-language"></i>
+                                    Full English Translation
+                                </div>
+                                <div class="result-content" id="groqEnglishTranslation"></div>
+                            </div>
+                            
+                            <div class="result-card">
+                                <div class="result-title" id="groqNativeTitle">
+                                    <i class="fas fa-flag"></i>
+                                    Full Native Translation
+                                </div>
+                                <div class="result-content" id="groqNativeTranslation"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="model-section">
+                        <div class="model-header gemini">
+                            <img src="https://www.gstatic.com/devrel-devsite/prod/v45f61267e228069a04b08c6a9a9b9a68/ai/images/favicon.ico" alt="Gemini" style="width: 20px; height: 20px;">
+                            <span>Gemini 1.5 Flash</span>
+                        </div>
+                        <div class="model-results">
+                            <div class="result-card">
+                                <div class="result-title">
+                                    <i class="fas fa-globe"></i>
+                                    Language Detected
+                                </div>
+                                <div class="result-content" id="geminiDetectedLanguage"></div>
+                            </div>
+                            
+                            <div class="result-card">
+                                <div class="result-title">
+                                    <i class="fas fa-language"></i>
+                                    Full English Translation
+                                </div>
+                                <div class="result-content" id="geminiEnglishTranslation"></div>
+                            </div>
+                            
+                            <div class="result-card">
+                                <div class="result-title" id="geminiNativeTitle">
+                                    <i class="fas fa-flag"></i>
+                                    Full Native Translation
+                                </div>
+                                <div class="result-content" id="geminiNativeTranslation"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn" id="copyGroqBtn">
+                        <i class="far fa-copy"></i>
+                        Copy Llama Results
+                    </button>
+                    <button class="action-btn" id="copyGeminiBtn">
+                        <i class="far fa-copy"></i>
+                        Copy Gemini Results
+                    </button>
+                    <button class="action-btn" id="clearBtn">
+                        <i class="fas fa-broom"></i>
+                        Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        &copy; 2023 LinguaBridge - AI Translation Comparison Tool
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show container with fade-in animation
+            setTimeout(() => {
+                document.querySelector('.container').classList.remove('hidden');
+            }, 100);
+            
+            // Character count
+            const userInput = document.getElementById('userInput');
+            const charCount = document.getElementById('charCount');
+            
+            userInput.addEventListener('input', function() {
+                charCount.textContent = this.value.length;
+            });
+            
+            // Language selection
+            const langButtons = document.querySelectorAll('.lang-btn');
+            langButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    langButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Translate button click
+            document.getElementById('translateBtn').addEventListener('click', translateText);
+            
+            // Also allow Enter key to trigger translation (with Shift+Enter for new line)
+            userInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    translateText();
+                }
+            });
+            
+            // Copy buttons
+            document.getElementById('copyGroqBtn').addEventListener('click', function() {
+                const english = document.getElementById('groqEnglishTranslation').textContent;
+                const native = document.getElementById('groqNativeTranslation').textContent;
+                
+                if (english && native) {
+                    navigator.clipboard.writeText(`Llama 3 Results:\nEnglish: ${english}\nNative: ${native}`)
+                        .then(() => {
+                            const originalText = this.innerHTML;
+                            this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                            setTimeout(() => {
+                                this.innerHTML = originalText;
+                            }, 2000);
+                        });
+                }
+            });
+            
+            document.getElementById('copyGeminiBtn').addEventListener('click', function() {
+                const english = document.getElementById('geminiEnglishTranslation').textContent;
+                const native = document.getElementById('geminiNativeTranslation').textContent;
+                
+                if (english && native) {
+                    navigator.clipboard.writeText(`Gemini Results:\nEnglish: ${english}\nNative: ${native}`)
+                        .then(() => {
+                            const originalText = this.innerHTML;
+                            this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                            setTimeout(() => {
+                                this.innerHTML = originalText;
+                            }, 2000);
+                        });
+                }
+            });
+            
+            // Clear button
+            document.getElementById('clearBtn').addEventListener('click', function() {
+                userInput.value = '';
+                charCount.textContent = '0';
+                document.getElementById('resultSection').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'none';
+            });
+        });
+
+        async function translateText() {
+            const userInput = document.getElementById('userInput').value.trim();
+            const errorMessage = document.getElementById('errorMessage');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const resultSection = document.getElementById('resultSection');
+            const activeLang = document.querySelector('.lang-btn.active').dataset.lang;
+            const nativeTitle = document.getElementById('nativeTitle');
+            
+            // Hide previous results and errors
+            errorMessage.style.display = 'none';
+            resultSection.style.display = 'none';
+            
+            // Validate input
+            if (!userInput) {
+                errorMessage.textContent = 'Please enter some text to translate';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            if (userInput.length > 500) {
+                errorMessage.textContent = 'Input text is too long (max 500 characters)';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            // Show loading indicator
+            loadingIndicator.style.display = 'block';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:5000/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: userInput,
+                        lang: activeLang
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Update stats bar
+                document.getElementById('detectedLanguage').textContent = `Language: ${data.groq.detected_language}`;
+                document.getElementById('executionTime').textContent = `Time: ${data.execution_time}s`;
+                
+                // Update Groq (Llama) results
+                document.getElementById('groqDetectedLanguage').textContent = data.groq.detected_language;
+                document.getElementById('groqEnglishTranslation').textContent = data.groq.english_translation;
+                document.getElementById('groqNativeTranslation').textContent = data.groq.native_translation;
+                document.getElementById('groqNativeTitle').innerHTML = `<i class="fas fa-flag"></i> Full ${data.groq.detected_language} Translation`;
+                
+                // Update Gemini results
+                document.getElementById('geminiDetectedLanguage').textContent = data.gemini.detected_language;
+                document.getElementById('geminiEnglishTranslation').textContent = data.gemini.english_translation;
+                document.getElementById('geminiNativeTranslation').textContent = data.gemini.native_translation;
+                document.getElementById('geminiNativeTitle').innerHTML = `<i class="fas fa-flag"></i> Full ${data.gemini.detected_language} Translation`;
+                
+                // Show results with animation
+                resultSection.style.display = 'block';
+            } catch (error) {
+                errorMessage.textContent = `Translation failed: ${error.message}`;
+                errorMessage.style.display = 'block';
+                console.error('Translation error:', error);
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
